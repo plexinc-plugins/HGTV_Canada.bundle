@@ -3,7 +3,7 @@ import re, string, datetime, operator
 
 ####################################################################################################
 
-VIDEO_PREFIX = "/video/greattv.ca"
+VIDEO_PREFIX = "/video/hgtv.ca"
 
 NAME = L('Title')
 
@@ -34,6 +34,8 @@ def Start():
 ####################################################################################################
 def MainMenu():
     dir = MediaContainer(viewGroup="List")
+    shows_with_seasons = {}
+    shows_without_seasons = {}
 
     network = HGTV_PARAMS
     
@@ -42,7 +44,22 @@ def MainMenu():
         if "Full Episodes" in item['parent']:
             title = item['title']
             id = item['ID']
-            dir.Append(Function(DirectoryItem(VideosPage, title), pid=network[0], id=id))
+            if re.search("Season", title):
+                show, season = title.split("Season")
+                show = show.rstrip().split(":")[0].rstrip()
+                if not(show in shows_with_seasons):
+                    shows_with_seasons[show] = ""
+                    dir.Append(Function(DirectoryItem(SeasonsPage, show), network=network))
+            else:
+                if not(title in shows_without_seasons):
+                    shows_without_seasons[title] = []
+                shows_without_seasons[title].append(Function(DirectoryItem(VideosPage, title), pid=network[0], id=id))
+
+    for show in shows_without_seasons:
+        if not(show in shows_with_seasons) and len([added_show for added_show in shows_with_seasons if show in added_show or added_show in show]) == 0:
+            for item in shows_without_seasons[show]:
+                dir.Append(item)
+
     dir.Sort('title')
     
     return dir
@@ -105,15 +122,9 @@ def VideosPage(sender, pid, id):
 def SeasonsPage(sender, network):
     dir = MediaContainer(title2=sender.itemTitle, viewGroup="List", art=sender.art)
     content = JSON.ObjectFromURL(FEED_LIST % (network[0], network[1]))
-    #Log(sender.itemTitle)
-    #Log(content)
     for item in content['items']:
-        if sender.itemTitle in item['fullTitle']:
-            title = item['fullTitle']
-            #Log(title)
-            title = title.split('/')[-1]
-            #if title == 'New This Week':
-            #    title = item['title']
+        if "Full Episodes" in item['parent'] and sender.itemTitle in item['title']:
+            title = item['title'].split(sender.itemTitle)[-1].split(":")[-1].lstrip()
             id = item['ID']
             #thumb = item['thumbnailURL']
             dir.Append(Function(DirectoryItem(VideosPage, title, thumb=sender.thumb), pid=network[0], id=id))
