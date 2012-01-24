@@ -17,7 +17,7 @@ DIRECT_FEED = "http://release.theplatform.com/content.select?format=SMIL&pid=%s&
 ####################################################################################################
 
 def Start():
-    Plugin.AddPrefixHandler("video/hgtv.ca", MainMenu, NAME, ICON, ART)
+    Plugin.AddPrefixHandler("/video/hgtvcanada", MainMenu, NAME, ICON, ART)
 
     Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
     Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
