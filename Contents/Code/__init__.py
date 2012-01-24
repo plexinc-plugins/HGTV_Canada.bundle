@@ -1,27 +1,23 @@
-
-import re, string, datetime, operator
+import re, datetime
 
 ####################################################################################################
 
-VIDEO_PREFIX = "/video/hgtv.ca"
+NAME = "HGTV.ca"
+ART = 'art-default.jpg'
+ICON = 'icon-default.png'
 
-NAME = L('Title')
+HGTV_PARAMS = ["HmHUZlCuIXO_ymAAPiwCpTCNZ3iIF1EG", "z/HGTV%20Player%20-%20Video%20Center"]
 
-ART             = 'art-default.jpg'
-ICON            = 'icon-default.png'
+FEED_LIST = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getCategoryList?PID=%s&startIndex=1&endIndex=500&query=hasReleases&query=CustomText|PlayerTag|%s&field=airdate&field=fullTitle&field=author&field=description&field=PID&field=thumbnailURL&field=title&contentCustomField=title&field=ID&field=parent"
 
-HGTV_PARAMS         = ["HmHUZlCuIXO_ymAAPiwCpTCNZ3iIF1EG", "z/HGTV%20Player%20-%20Video%20Center"]
-
-FEED_LIST    = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getCategoryList?PID=%s&startIndex=1&endIndex=500&query=hasReleases&query=CustomText|PlayerTag|%s&field=airdate&field=fullTitle&field=author&field=description&field=PID&field=thumbnailURL&field=title&contentCustomField=title&field=ID&field=parent"
-
-FEEDS_LIST    = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getReleaseList?PID=%s&startIndex=1&endIndex=500&query=categoryIDs|%s&query=BitrateEqualOrGreaterThan|400000&query=BitrateLessThan|601000&sortField=airdate&sortDescending=true&field=airdate&field=author&field=description&field=length&field=PID&field=thumbnailURL&field=title&contentCustomField=title"
+FEEDS_LIST = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getReleaseList?PID=%s&startIndex=1&endIndex=500&query=categoryIDs|%s&query=BitrateEqualOrGreaterThan|400000&query=BitrateLessThan|601000&sortField=airdate&sortDescending=true&field=airdate&field=author&field=description&field=length&field=PID&field=thumbnailURL&field=title&contentCustomField=title"
 
 DIRECT_FEED = "http://release.theplatform.com/content.select?format=SMIL&pid=%s&UserName=Unknown&Embedded=True&TrackBrowser=True&Tracking=True&TrackLocation=True"
 
 ####################################################################################################
 
 def Start():
-    Plugin.AddPrefixHandler(VIDEO_PREFIX, MainMenu, L('VideoTitle'), ICON, ART)
+    Plugin.AddPrefixHandler("video/hgtv.ca", MainMenu, NAME, ICON, ART)
 
     Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
     Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
@@ -30,6 +26,7 @@ def Start():
     MediaContainer.title1 = NAME
     DirectoryItem.thumb = R(ICON)
 
+    HTTP.CacheTime = CACHE_1HOUR
 
 ####################################################################################################
 def MainMenu():
@@ -38,7 +35,7 @@ def MainMenu():
     shows_without_seasons = {}
 
     network = HGTV_PARAMS
-    
+
     content = JSON.ObjectFromURL(FEED_LIST % (network[0], network[1]))
     for item in content['items']:
         if "Full Episodes" in item['parent']:
@@ -61,9 +58,9 @@ def MainMenu():
                 dir.Append(item)
 
     dir.Sort('title')
-    
+
     return dir
-    
+
 ####################################################################################################
 def VideoPlayer(sender, pid):
 
@@ -93,7 +90,7 @@ def VideoPlayer(sender, pid):
     #Log(player)
     #Log(clip)
     return Redirect(RTMPVideoItem(player, clip))
-    
+
 ####################################################################################################
 
 def VideosPage(sender, pid, id):
@@ -112,11 +109,11 @@ def VideosPage(sender, pid, id):
         airdate = int(item['airdate'])/1000
         subtitle = 'Originally Aired: ' + datetime.datetime.fromtimestamp(airdate).strftime('%a %b %d, %Y')
         dir.Append(Function(VideoItem(VideoPlayer, title=title, subtitle=subtitle, summary=summary, thumb=thumb, duration=duration), pid=pid))
-    
+
     dir.Sort('title')
-    
+
     return dir
-    
+
 ####################################################################################################
 
 def SeasonsPage(sender, network):
@@ -130,6 +127,5 @@ def SeasonsPage(sender, network):
             dir.Append(Function(DirectoryItem(VideosPage, title, thumb=sender.thumb), pid=network[0], id=id))
     dir.Sort('title')
     return dir
-            
-####################################################################################################
 
+####################################################################################################
