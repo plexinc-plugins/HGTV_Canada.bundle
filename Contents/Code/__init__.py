@@ -1,4 +1,3 @@
-
 import re, string, datetime, operator
 
 ####################################################################################################
@@ -14,9 +13,11 @@ HGTV_PARAMS         = ["HmHUZlCuIXO_ymAAPiwCpTCNZ3iIF1EG", "z/HGTV%20Player%20-%
 
 FEED_LIST    = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getCategoryList?PID=%s&startIndex=1&endIndex=500&query=hasReleases&query=CustomText|PlayerTag|%s&field=airdate&field=fullTitle&field=author&field=description&field=PID&field=thumbnailURL&field=title&contentCustomField=title&field=ID&field=parent"
 
-FEEDS_LIST    = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getReleaseList?PID=%s&startIndex=1&endIndex=500&query=categoryIDs|%s&query=BitrateEqualOrGreaterThan|400000&query=BitrateLessThan|601000&sortField=airdate&sortDescending=true&field=airdate&field=author&field=description&field=length&field=PID&field=thumbnailURL&field=title&contentCustomField=title"
+FEEDS_LIST    = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getReleaseList?PID=%s&startIndex=1&endIndex=500&query=categoryIDs|%s&sortField=airdate&sortDescending=true&field=airdate&field=author&field=description&field=length&field=PID&field=thumbnailURL&field=title&contentCustomField=title"
 
 DIRECT_FEED = "http://release.theplatform.com/content.select?format=SMIL&pid=%s&UserName=Unknown&Embedded=True&TrackBrowser=True&Tracking=True&TrackLocation=True"
+
+SHOW_CATS = ["Full Episodes","Sarah Richardson","Mike Holmes","Peter Fallico","Sam Pynn","Colin and Justin","Classics"]
 
 ####################################################################################################
 
@@ -41,7 +42,7 @@ def MainMenu():
     
     content = JSON.ObjectFromURL(FEED_LIST % (network[0], network[1]))
     for item in content['items']:
-        if "Full Episodes" in item['parent']:
+        if wantedCats(item['parent']):
             title = item['title']
             id = item['ID']
             if re.search("Season", title):
@@ -65,7 +66,7 @@ def MainMenu():
     return dir
     
 ####################################################################################################
-def VideoPlayer(sender, pid):
+def VideoPlayer(sender, pid, duration):
 
     videosmil = HTTP.Request(DIRECT_FEED % pid).content
     player = videosmil.split("ref src")
@@ -101,7 +102,7 @@ def VideosPage(sender, pid, id):
     dir = MediaContainer(title2=sender.itemTitle, viewGroup="InfoList", art=sender.art)
     pageUrl = FEEDS_LIST % (pid, id)
     feeds = JSON.ObjectFromURL(pageUrl)
-    #Log(feeds)
+    Log(feeds)
 
     for item in feeds['items']:
         title = item['title']
@@ -111,7 +112,7 @@ def VideosPage(sender, pid, id):
         thumb = item['thumbnailURL']
         airdate = int(item['airdate'])/1000
         subtitle = 'Originally Aired: ' + datetime.datetime.fromtimestamp(airdate).strftime('%a %b %d, %Y')
-        dir.Append(Function(VideoItem(VideoPlayer, title=title, subtitle=subtitle, summary=summary, thumb=thumb, duration=duration), pid=pid))
+        dir.Append(Function(VideoItem(VideoPlayer, title=title, subtitle=subtitle, summary=summary, thumb=thumb, duration=duration), pid=pid, duration=duration))
     
     dir.Sort('title')
     
@@ -123,7 +124,7 @@ def SeasonsPage(sender, network):
     dir = MediaContainer(title2=sender.itemTitle, viewGroup="List", art=sender.art)
     content = JSON.ObjectFromURL(FEED_LIST % (network[0], network[1]))
     for item in content['items']:
-        if "Full Episodes" in item['parent'] and sender.itemTitle in item['title']:
+        if wantedCats(item['parent']) and sender.itemTitle in item['title']:
             title = item['title'].split(sender.itemTitle)[-1].split(":")[-1].lstrip()
             id = item['ID']
             #thumb = item['thumbnailURL']
@@ -133,3 +134,10 @@ def SeasonsPage(sender, network):
             
 ####################################################################################################
 
+def wantedCats(parent):
+        for show in SHOW_CATS:
+                if show in parent:
+                        return 1                
+        return 0
+
+####################################################################################################
