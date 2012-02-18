@@ -1,6 +1,5 @@
 import re, datetime
 
-####################################################################################################
 NAME = "HGTV.ca"
 ART = 'art-default.jpg'
 ICON = 'icon-default.png'
@@ -21,6 +20,7 @@ def Start():
 
     MediaContainer.art = R(ART)
     MediaContainer.title1 = NAME
+    MediaContainer.viewGroup = "InfoList"
     DirectoryItem.thumb = R(ICON)
 
     HTTP.CacheTime = CACHE_1HOUR
@@ -33,22 +33,22 @@ def MainMenu():
     shows_without_seasons = {}
 
     network = HGTV_PARAMS
-
     content = JSON.ObjectFromURL(FEED_LIST % (network[0], network[1]))
+
     for item in content['items']:
-        if wantedCats(item['parent']):
+        if WantedCats(item['parent']):
             title = item['title']
             id = item['ID']
             if re.search("Season", title):
                 show, season = title.split("Season")
-                show = show.rstrip().split(":")[0].rstrip()
+                show = show.rstrip().split(":")[0].rstrip().rstrip('.')
                 if not(show in shows_with_seasons):
                     shows_with_seasons[show] = ""
                     dir.Append(Function(DirectoryItem(SeasonsPage, show), network=network))
             else:
                 if not(title in shows_without_seasons):
                     shows_without_seasons[title] = []
-                shows_without_seasons[title].append(Function(DirectoryItem(VideosPage, title), pid=network[0], id=id))
+                    shows_without_seasons[title].append(Function(DirectoryItem(VideosPage, title), pid=network[0], id=id))
 
     for show in shows_without_seasons:
         if not(show in shows_with_seasons) and len([added_show for added_show in shows_with_seasons if show in added_show or added_show in show]) == 0:
@@ -56,6 +56,7 @@ def MainMenu():
                 dir.Append(item)
 
     dir.Sort('title')
+
     return dir
 
 ####################################################################################################
@@ -89,7 +90,7 @@ def VideoPlayer(sender, pid):
 ####################################################################################################
 def VideosPage(sender, pid, id):
 
-    dir = MediaContainer(title2=sender.itemTitle, viewGroup="InfoList", art=sender.art)
+    dir = MediaContainer(title2=sender.itemTitle, art=sender.art)
     pageUrl = FEEDS_LIST % (pid, id)
     feeds = JSON.ObjectFromURL(pageUrl)
 
@@ -104,6 +105,7 @@ def VideosPage(sender, pid, id):
         dir.Append(Function(VideoItem(VideoPlayer, title=title, subtitle=subtitle, summary=summary, thumb=thumb, duration=duration), pid=pid))
 
     dir.Sort('title')
+
     return dir
 
 ####################################################################################################
@@ -111,20 +113,24 @@ def SeasonsPage(sender, network):
 
     dir = MediaContainer(title2=sender.itemTitle, viewGroup="List", art=sender.art)
     content = JSON.ObjectFromURL(FEED_LIST % (network[0], network[1]))
+    season_list = []
 
     for item in content['items']:
-        if wantedCats(item['parent']) and sender.itemTitle in item['title']:
-            title = item['title'].split(sender.itemTitle)[-1].split(":")[-1].lstrip()
-            id = item['ID']
-            #thumb = item['thumbnailURL']
-            dir.Append(Function(DirectoryItem(VideosPage, title, thumb=sender.thumb), pid=network[0], id=id))
+        if WantedCats(item['parent']) and sender.itemTitle in item['title']:
+            title = item['title'].split(sender.itemTitle)[1].lstrip(':').lstrip('.').lstrip()
+            if title not in season_list:
+                season_list.append(title)
+                id = item['ID']
+                #thumb = item['thumbnailURL']
+                dir.Append(Function(DirectoryItem(VideosPage, title, thumb=sender.thumb), pid=network[0], id=id))
 
     dir.Sort('title')
-    return dir
-            
-####################################################################################################
 
-def wantedCats(parent):
+    return dir
+
+####################################################################################################
+def WantedCats(parent):
+
     for show in SHOW_CATS:
         if show in parent:
             return 1                
