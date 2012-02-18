@@ -18,6 +18,8 @@
 	<string>1.0</string>
 	<key>PlexFrameworkVersion</key>
 	<string>2</string>
+	<key>PlexClientPlatforms</key>
+	<string>*</string>
 	<key>PlexPluginMode</key>
 	<string>AlwaysOn</string>
 	<key>PlexPluginRegions</key>
