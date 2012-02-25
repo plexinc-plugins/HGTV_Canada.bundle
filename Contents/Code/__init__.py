@@ -35,6 +35,10 @@ def MainMenu():
     network = HGTV_PARAMS
     content = JSON.ObjectFromURL(FEED_LIST % (network[0], network[1]))
 
+    if not Platform.HasFlash():
+        return MessageContainer(NAME, L('This channel requires Flash. Please download and install Adobe Flash on the computer running Plex Media Server.'))
+
+
     for item in content['items']:
         if WantedCats(item['parent']):
             title = item['title']
