@@ -108,11 +108,6 @@ def VideosPage(sender, pid, id):
         subtitle = 'Originally Aired: ' + datetime.datetime.fromtimestamp(airdate).strftime('%a %b %d, %Y')
         dir.Append(Function(VideoItem(VideoPlayer, title=title, subtitle=subtitle, summary=summary, thumb=thumb, duration=duration), pid=pid))
 
-    # We don't want to force this sort here, leave it at the default sort option in the URI
-    # otherwise we get all the episodes in incorrect orders.  The default of the URI is
-    # the air date, which is preferable to alphabetical -- Gerk
-    # dir.Sort('title')
-
     return dir
 
 ####################################################################################################
