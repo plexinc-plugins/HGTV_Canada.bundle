@@ -108,8 +108,6 @@ def VideosPage(sender, pid, id):
         subtitle = 'Originally Aired: ' + datetime.datetime.fromtimestamp(airdate).strftime('%a %b %d, %Y')
         dir.Append(Function(VideoItem(VideoPlayer, title=title, subtitle=subtitle, summary=summary, thumb=thumb, duration=duration), pid=pid))
 
-    dir.Sort('title')
-
     return dir
 
 ####################################################################################################
