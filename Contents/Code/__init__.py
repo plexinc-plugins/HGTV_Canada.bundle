@@ -8,7 +8,7 @@ HGTV_PARAMS = ["HmHUZlCuIXO_ymAAPiwCpTCNZ3iIF1EG", "z/HGTV%20Player%20-%20Video%
 FEED_LIST = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getCategoryList?PID=%s&startIndex=1&endIndex=500&query=hasReleases&query=CustomText|PlayerTag|%s&field=airdate&field=fullTitle&field=author&field=description&field=PID&field=thumbnailURL&field=title&contentCustomField=title&field=ID&field=parent"
 FEEDS_LIST = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getReleaseList?PID=%s&startIndex=1&endIndex=500&query=categoryIDs|%s&sortField=airdate&sortDescending=true&field=airdate&field=author&field=description&field=length&field=PID&field=thumbnailURL&field=title&contentCustomField=title"
 DIRECT_FEED = "http://release.theplatform.com/content.select?format=SMIL&pid=%s&UserName=Unknown&Embedded=True&TrackBrowser=True&Tracking=True&TrackLocation=True"
-SHOW_CATS = ["Full Episodes","Sarah Richardson","Mike Holmes","Peter Fallico","Sam Pynn","Colin and Justin","Classics"]
+#SHOW_CATS = ["Full Episodes","Sarah Richardson","Mike Holmes","Peter Fallico","Sam Pynn","Colin and Justin","Classics"]
 
 ####################################################################################################
 def Start():
@@ -28,19 +28,37 @@ def Start():
 ####################################################################################################
 def MainMenu():
 
-    dir = MediaContainer(viewGroup="List")
+#     if not Platform.HasFlash:
+#         return MessageContainer(NAME, L('This channel requires Flash. Please download and install Adobe Flash on the computer running Plex Media Server.'))
+
+#	dir = LoadShowList(["Full Episodes","Sarah Richardson","Mike Holmes","Peter Fallico","Sam Pynn","Colin and Justin","Classics"])
+	#dir = LoadShowList(["Sarah Richardson"])
+#	return dir
+
+	#dir = MediaContainer(viewGroup='List')
+	#dir.Append(Function(DirectoryItem(LoadShowList, shows="Full Episodes"), category='fullepisodes'))
+	dir.Append(Function(DirectoryItem(loadShowList, loadCats='["Full Episodes"]'), title='Full Episodes'))
+
+	return dir
+	
+def Shows(showCat):
+	dir = MediaContainer(viewGroup='List', title2=sender.itemTitle)
+	
+
+def LoadShowList(loadCats, title):
+    dir = MediaContainer(viewGroup="List", title2=title)
     shows_with_seasons = {}
     shows_without_seasons = {}
 
     network = HGTV_PARAMS
     content = JSON.ObjectFromURL(FEED_LIST % (network[0], network[1]))
 
-    if not Platform.HasFlash:
-        return MessageContainer(NAME, L('This channel requires Flash. Please download and install Adobe Flash on the computer running Plex Media Server.'))
+    #loadcats = ["%s",loadCats]
+    loadCats = ["Full Episodes","Sarah Richardson","Mike Holmes","Peter Fallico","Sam Pynn","Colin and Justin","Classics"]
 
 
     for item in content['items']:
-        if WantedCats(item['parent']):
+        if WantedCats(item['parent'],loadCats):
             title = item['title']
             id = item['ID']
             if re.search("Season", title):
@@ -131,9 +149,9 @@ def SeasonsPage(sender, network):
     return dir
 
 ####################################################################################################
-def WantedCats(parent):
+def WantedCats(thisShow,loadCats):
 
-    for show in SHOW_CATS:
-        if show in parent:
+    for show in loadCats:
+        if show in thisShow:
             return 1                
     return 0
