@@ -203,15 +203,3 @@ def WantedCats(thisShow,cats):
             return 1                
     return 0
 
-
-####################################################################################################
-def GetThumb(url):
-	try:
-		data = HTTP.Request(url, cacheTime=CACHE_1MONTH).content
-		try:
-			data
-			return url
-		except:
-			return R(ICON)
-	except:
-		return R(ICON)
