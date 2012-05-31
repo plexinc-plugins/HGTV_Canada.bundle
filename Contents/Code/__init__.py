@@ -258,25 +258,45 @@ def VideosPage(pid, iid):
 		thumb = item['thumbnailURL'].replace("\r\n\r\n","")
 		airdate = int(item['airdate'])/1000
 		originally_available_at = datetime.datetime.fromtimestamp(airdate)
-
-		# maybe useful later?  These don't seem to work right now in EpisodeObject
-		# or at least they don't show up in the info screen when they are added
-		# NB: Bug? EpisodeObject doesn't seem to provide you a way to set an episode number!
-		#season = item['contentCustomData'][1]['value']
-		# example: outputs 309 for S03E09 - useful for absolute_key
-		#episode = season + item['contentCustomData'][0]['value']
-
-		oc.add(
-			EpisodeObject(
-				key = Callback(VideoParse, pid=pid),
-				rating_key = pid, 
-				title = title,
-				summary=summary,
-				duration=duration,
-				thumb = thumb,
-				originally_available_at = originally_available_at
+		
+		try:
+			# try to set the seasons and episode info
+			# NB: episode is set with 'index' (not in framework docs)!
+			season = item['contentCustomData'][1]['value']
+			seasonint = int(float(season))
+			episode = item['contentCustomData'][0]['value']
+			episodeint = int(float(episode))
+# 			Log("Gerk: season string: %s",season)
+# 			Log("Gerk: season int: %i",seasonint)
+# 			Log("Gerk: episode string: %s",episode)
+# 			Log("Gerk: episode int: %i",episodeint)
+			oc.add(
+				EpisodeObject(
+					key = Callback(VideoParse, pid=pid),
+					rating_key = pid, 
+					title = title,
+					summary=summary,
+					duration=duration,
+					thumb = thumb,
+					originally_available_at = originally_available_at,
+	 				season = seasonint,
+	 				index = episodeint
+				)
 			)
-		)
+
+		except:
+			# if we don't get the season/episode info then don't set it
+			oc.add(
+				EpisodeObject(
+					key = Callback(VideoParse, pid=pid),
+					rating_key = pid, 
+					title = title,
+					summary=summary,
+					duration=duration,
+					thumb = thumb,
+					originally_available_at = originally_available_at
+				)
+			)
 
 	return oc
 
