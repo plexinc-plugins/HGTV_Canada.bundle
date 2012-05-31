@@ -8,6 +8,24 @@ HGTV_PARAMS = ["HmHUZlCuIXO_ymAAPiwCpTCNZ3iIF1EG", "z/HGTV%20Player%20-%20Video%
 FEED_LIST = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getCategoryList?PID=%s&startIndex=1&endIndex=500&query=hasReleases&query=CustomText|PlayerTag|%s&field=airdate&field=fullTitle&field=author&field=description&field=PID&field=thumbnailURL&field=title&contentCustomField=title&field=ID&field=parent"
 FEEDS_LIST = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getReleaseList?PID=%s&startIndex=1&endIndex=500&query=categoryIDs|%s&sortField=airdate&sortDescending=true&field=airdate&field=author&field=description&field=length&field=PID&field=thumbnailURL&field=title&contentCustomField=title&contentCustomField=Episode&contentCustomField=Season"
 DIRECT_FEED = "http://release.theplatform.com/content.select?format=SMIL&pid=%s&UserName=Unknown&Embedded=True&TrackBrowser=True&Tracking=True&TrackLocation=True"
+LOADCATS = { 
+	'full':["Full Episodes","Sarah Richardson","Mike Holmes","Peter Fallico","Sam Pynn","Colin and Justin","Classics"],
+	'sarah':['Sarah Richardson'],
+	'mike':['Mike Holmes'],
+	"peter":["Peter Fallico"],
+	"sam":["Sam Pynn"],
+	"colin":["Colin and Justin"],
+	"classics":["Classics"],
+	"original":["Original Video"],
+	"diy":["DIY Projects"],
+	"web":["Web Exclusives"],
+	"kitchens":["Kitchens"],
+	"realestate":["Real Estate"],
+	"backyard":["Backyard Living"],
+	"renos":["Renovations"],
+	"recent":["Most Recent"]
+	}
+
 
 ####################################################################################################
 def Start():
@@ -161,6 +179,7 @@ def LoadShowList(cats):
 					# bad data from provider, skip this one
 					continue
 				show = show.rstrip().split(":")[0].rstrip().rstrip('.')
+				
 				if not(show in shows_with_seasons):
 					shows_with_seasons[show] = ""
 					oc.add(
@@ -191,7 +210,7 @@ def LoadShowList(cats):
 
 	# sort here
 	oc.objects.sort(key = lambda obj: obj.title)
-		
+
 	return oc
 
 ####################################################################################################
@@ -295,39 +314,7 @@ def SeasonsPage(cats, network, showtitle):
 ####################################################################################################
 def WantedCats(thisShow,cats):
 
-	if(cats == "full"):
-		loadCats = ["Full Episodes","Sarah Richardson","Mike Holmes","Peter Fallico","Sam Pynn","Colin and Justin","Classics"]
-	elif(cats == "sarah"):
-		loadCats = ["Sarah Richardson"]
-	elif(cats == "mike"):
-		loadCats = ["Mike Holmes"]
-	elif(cats == "peter"):
-		loadCats = ["Peter Fallico"]
-	elif(cats == "sam"):
-		loadCats = ["Sam Pynn"]
-	elif(cats == "colin"):
-		loadCats = ["Colin and Justin"]
-	elif(cats == "classics"):
-		loadCats = ["Classics"]
-	elif(cats == "original"):
-		loadCats = ["Original Video"]
-	elif(cats == "diy"):
-		loadCats = ["DIY Projects"]
-	elif(cats == "web"):
-		loadCats = ["Web Exclusives"]
-	elif(cats == "kitchens"):
-		loadCats = ["Kitchens"]
-	elif(cats == "realestate"):
-		loadCats = ["Real Estate"]
-	elif(cats == "backyard"):
-		loadCats = ["Backyard Living"]
-	elif(cats == "renos"):
-		loadCats = ["Renovations"]
-	elif(cats == "recent"):
-		loadCats = ["Most Recent"]
-
-
-	for show in loadCats:
+	for show in LOADCATS[cats]:
 		if show in thisShow:
 			return 1				
 	return 0
