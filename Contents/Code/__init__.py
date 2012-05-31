@@ -28,6 +28,8 @@ RE_SEASON_TEST = Regex("Season")
 ####################################################################################################
 def Start():
 
+	Plugin.AddPrefixHandler('/video/hgtvcanada', MainMenu, TITLE, ICON, ART)
+
 	# setup the default viewgroups for the plugin	
 	Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
 	Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
@@ -50,8 +52,6 @@ def Start():
 	HTTP.CacheTime = CACHE_1HOUR
 
 ####################################################################################################
-@handler('/video/hgtvcanada', TITLE)
-
 def MainMenu():
 
 	if not Platform.HasFlash:
