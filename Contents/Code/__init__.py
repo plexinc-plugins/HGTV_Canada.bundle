@@ -151,7 +151,7 @@ def LoadShowList(cats):
 	for item in content['items']:
 		if WantedCats(item['parent'],cats):
 			title = item['title']
-			# there are a good handful of tumbnailUrls that have carriage returns in the middle of them!
+			# there are a good handful of thumbnailUrls that have carriage returns in the middle of them!
 			thumb = item['thumbnailURL'].replace("\r\n\r\n","")
 			iid = item['ID']
 			
@@ -235,14 +235,16 @@ def VideosPage(pid, iid):
 		pid = item['PID']
 		summary =  item['description'].replace('In Full:', '')
 		duration = item['length']
-		# there are a good handful of tumbnailUrls that have carriage returns in the middle of them!
+		# there are a good handful of thumbnailUrls that have carriage returns in the middle of them!
 		thumb = item['thumbnailURL'].replace("\r\n\r\n","")
 		airdate = int(item['airdate'])/1000
 		originally_available_at = datetime.datetime.fromtimestamp(airdate)
 
 		# maybe useful later?  These don't seem to work right now in EpisodeObject
+		# or at least they don't show up in the info screen when they are added
+		# NB: Bug? EpisodeObject doesn't seem to provide you a way to set an episode number!
 		#season = item['contentCustomData'][1]['value']
-		# example: outputs 309 for S03E09
+		# example: outputs 309 for S03E09 - useful for absolute_key
 		#episode = season + item['contentCustomData'][0]['value']
 
 		oc.add(
@@ -273,11 +275,12 @@ def SeasonsPage(cats, network, showtitle):
 			if title not in season_list:
 				if title=="":
 					# bad data from provider, this is a corner case and happens often
-					# enough that it's worth adding these in as uncategorized
+					# enough that it's worth adding these in as uncategorized if they
+					# made it to the Seasons list (it means they have child elements to view)
 					title="Uncategorized Items"
 				season_list.append(title)
 				iid = item['ID']
-				# there are a good handful of tumbnailUrls that have carriage returns in the middle of them!
+				# there are a good handful of thumbnailUrls that have carriage returns in the middle of them!
 				thumb = item['thumbnailURL'].replace("\r\n\r\n","")
 				oc.add(
 					DirectoryObject(
@@ -329,11 +332,3 @@ def WantedCats(thisShow,cats):
 			return 1				
 	return 0
 
-
-####################################################################################################
-def GetThumb(url):
-	try:
-		data = HTTP.Request(url, cacheTime = CACHE_1MONTH).content
-		return DataObject(data, 'image/jpeg')
-	except:
-		return Redirect(R(ICON))
