@@ -1,5 +1,3 @@
-import re, datetime
-
 TITLE = "HGTV.ca"
 ART = 'art-default.jpg'
 ICON = 'icon-default.png'
@@ -25,7 +23,7 @@ LOADCATS = {
 	"renos":["Renovations"],
 	"recent":["Most Recent"]
 	}
-
+RE_SEASON_TEST = Regex("Season")
 
 ####################################################################################################
 def Start():
@@ -170,10 +168,10 @@ def LoadShowList(cats):
 		if WantedCats(item['parent'],cats):
 			title = item['title']
 			# there are a good handful of thumbnailUrls that have carriage returns in the middle of them!
-			thumb = item['thumbnailURL'].replace("\r\n\r\n","")
+			thumb_url = item['thumbnailURL'].replace("\r\n\r\n","")
 			iid = item['ID']
 			
-			if re.search("Season", title):
+			if RE_SEASON_TEST.search(title):
 				show, season = title.split("Season")
 				if show=="":
 					# bad data from provider, skip this one
@@ -186,7 +184,7 @@ def LoadShowList(cats):
 						DirectoryObject(
 							key = Callback(SeasonsPage, cats=cats, network=network, showtitle=show),
 							title = show, 
-							thumb = thumb
+							thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=R(ICON))
 						)
 					)
 			else:
@@ -199,7 +197,7 @@ def LoadShowList(cats):
 						DirectoryObject(
 							key = Callback(VideosPage, pid=network[0], iid=iid),
 							title = title,
-							thumb = thumb
+							thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=R(ICON))
 						)
 					)
 
@@ -245,7 +243,9 @@ def VideoParse(pid):
 ####################################################################################################
 def VideosPage(pid, iid):
 
-	oc = ObjectContainer()
+	oc = ObjectContainer(
+		view_group = 'InfoList'
+	)
 	pageUrl = FEEDS_LIST % (pid, iid)
 	feeds = JSON.ObjectFromURL(pageUrl)
 
@@ -255,9 +255,9 @@ def VideosPage(pid, iid):
 		summary =  item['description'].replace('In Full:', '')
 		duration = item['length']
 		# there are a good handful of thumbnailUrls that have carriage returns in the middle of them!
-		thumb = item['thumbnailURL'].replace("\r\n\r\n","")
+		thumb_url = item['thumbnailURL'].replace("\r\n\r\n","")
 		airdate = int(item['airdate'])/1000
-		originally_available_at = datetime.datetime.fromtimestamp(airdate)
+		originally_available_at = Datetime.FromTimestamp(airdate).date()
 		
 		try:
 			# try to set the seasons and episode info
@@ -266,10 +266,7 @@ def VideosPage(pid, iid):
 			seasonint = int(float(season))
 			episode = item['contentCustomData'][0]['value']
 			episodeint = int(float(episode))
-# 			Log("Gerk: season string: %s",season)
-# 			Log("Gerk: season int: %i",seasonint)
-# 			Log("Gerk: episode string: %s",episode)
-# 			Log("Gerk: episode int: %i",episodeint)
+# 			Log("Gerk: %i-%i : %s",seasonint, episodeint, title)
 			oc.add(
 				EpisodeObject(
 					key = Callback(VideoParse, pid=pid),
@@ -277,7 +274,7 @@ def VideosPage(pid, iid):
 					title = title,
 					summary=summary,
 					duration=duration,
-					thumb = thumb,
+					thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=R(ICON)),
 					originally_available_at = originally_available_at,
 	 				season = seasonint,
 	 				index = episodeint
@@ -293,7 +290,7 @@ def VideosPage(pid, iid):
 					title = title,
 					summary=summary,
 					duration=duration,
-					thumb = thumb,
+					thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=R(ICON)),
 					originally_available_at = originally_available_at
 				)
 			)
@@ -320,12 +317,12 @@ def SeasonsPage(cats, network, showtitle):
 				season_list.append(title)
 				iid = item['ID']
 				# there are a good handful of thumbnailUrls that have carriage returns in the middle of them!
-				thumb = item['thumbnailURL'].replace("\r\n\r\n","")
+				thumb_url = item['thumbnailURL'].replace("\r\n\r\n","")
 				oc.add(
 					DirectoryObject(
 						key = Callback(VideosPage, pid=network[0], iid=iid),
 						title = title,
-						thumb = thumb
+						thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=R(ICON))
 					)
 				)
 	oc.objects.sort(key = lambda obj: obj.title)
