@@ -316,11 +316,12 @@ def SeasonsPage(cats, network, showtitle):
 					title="Uncategorized Items"
 				season_list.append(title)
 				iid = item['ID']
+				pid = item['PID']
 				# there are a good handful of thumbnailUrls that have carriage returns in the middle of them!
 				thumb_url = item['thumbnailURL'].replace("\r\n\r\n","")
 				oc.add(
 					DirectoryObject(
-						key = Callback(VideosPage, pid=network[0], iid=iid),
+						key = Callback(VideosPage, pid=pid, iid=iid),
 						title = title,
 						thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=R(ICON))
 					)
