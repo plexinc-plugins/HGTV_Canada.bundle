@@ -26,6 +26,14 @@ LOADCATS = {
 RE_SEASON_TEST = Regex("Season")
 VIDEO_URL = 'http://www.hgtv.ca/video/?releasePID=%s'
 
+# KNOWN BUGS/ISSUES:
+# The show 'Sarah 101' has some bad data associated with it, it isn't properly indicated in seasons, 
+# Season 2 does show up in "recent" for now, but it's not a show_with_season according to all our rules here
+# Let's hope this is a one-off problem and not something they will continue to break moving forward
+# workarounds weren't feasible (tried several) and rewriting for two episodes one show is not either ;)
+# -- Gerk - 2012/06/02
+
+
 ####################################################################################################
 def Start():
 
