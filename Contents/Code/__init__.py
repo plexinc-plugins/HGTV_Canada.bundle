@@ -24,6 +24,7 @@ LOADCATS = {
 	"recent":["Most Recent"]
 	}
 RE_SEASON_TEST = Regex("Season")
+VIDEO_URL = 'http://www.hgtv.ca/video/?releasePID=%s'
 
 ####################################################################################################
 def Start():
@@ -211,34 +212,6 @@ def LoadShowList(cats):
 
 	return oc
 
-####################################################################################################
-def VideoParse(pid):
-
-	videosmil = HTTP.Request(DIRECT_FEED % pid).content
-	player = videosmil.split("ref src")
-	player = player[2].split('"')
-
-	if ".mp4" in player[1]:
-		player = player[1].replace(".mp4", "")
-		try:
-			clip = player.split(";")
-			clip = "mp4:" + clip[4]
-		except:
-			clip = player.split("/video/")
-			player = player.split("/video/")[0]
-			clip = "mp4:/video/" + clip[-1]
-	else:
-		player = player[1].replace(".flv", "")
-		try:
-			clip = player.split(";")
-			clip = clip[4]
-		except:
-			clip = player.split("/video/")
-			player = player.split("/video/")[0]
-			clip = "/video/" + clip[-1]
-
-	return Redirect(RTMPVideoItem(player, clip))
-
 
 ####################################################################################################
 def VideosPage(pid, iid):
@@ -266,11 +239,10 @@ def VideosPage(pid, iid):
 			seasonint = int(float(season))
 			episode = item['contentCustomData'][0]['value']
 			episodeint = int(float(episode))
-# 			Log("Gerk: %i-%i : %s",seasonint, episodeint, title)
+
 			oc.add(
 				EpisodeObject(
-					key = Callback(VideoParse, pid=pid),
-					rating_key = pid, 
+					url = VIDEO_URL % pid,
 					title = title,
 					summary=summary,
 					duration=duration,
@@ -285,8 +257,7 @@ def VideosPage(pid, iid):
 			# if we don't get the season/episode info then don't set it
 			oc.add(
 				EpisodeObject(
-					key = Callback(VideoParse, pid=pid),
-					rating_key = pid, 
+					url = VIDEO_URL % pid,
 					title = title,
 					summary=summary,
 					duration=duration,
@@ -315,13 +286,13 @@ def SeasonsPage(cats, network, showtitle):
 					# made it to the Seasons list (it means they have child elements to view)
 					title="Uncategorized Items"
 				season_list.append(title)
+
 				iid = item['ID']
-				pid = item['PID']
 				# there are a good handful of thumbnailUrls that have carriage returns in the middle of them!
 				thumb_url = item['thumbnailURL'].replace("\r\n\r\n","")
 				oc.add(
 					DirectoryObject(
-						key = Callback(VideosPage, pid=pid, iid=iid),
+						key = Callback(VideosPage, pid=network[0], iid=iid),
 						title = title,
 						thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
 					)
