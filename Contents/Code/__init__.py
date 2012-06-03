@@ -24,6 +24,15 @@ LOADCATS = {
 	"recent":["Most Recent"]
 	}
 RE_SEASON_TEST = Regex("Season")
+VIDEO_URL = 'http://www.hgtv.ca/video/?releasePID=%s'
+
+# KNOWN BUGS/ISSUES:
+# The show 'Sarah 101' has some bad data associated with it, it isn't properly indicated in seasons, 
+# Season 2 does show up in "recent" for now, but it's not a show_with_season according to all our rules here
+# Let's hope this is a one-off problem and not something they will continue to break moving forward
+# workarounds weren't feasible (tried several) and rewriting for two episodes one show is not either ;)
+# -- Gerk - 2012/06/02
+
 
 ####################################################################################################
 def Start():
@@ -184,7 +193,7 @@ def LoadShowList(cats):
 						DirectoryObject(
 							key = Callback(SeasonsPage, cats=cats, network=network, showtitle=show),
 							title = show, 
-							thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=R(ICON))
+							thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
 						)
 					)
 			else:
@@ -197,7 +206,7 @@ def LoadShowList(cats):
 						DirectoryObject(
 							key = Callback(VideosPage, pid=network[0], iid=iid),
 							title = title,
-							thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=R(ICON))
+							thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
 						)
 					)
 
@@ -210,34 +219,6 @@ def LoadShowList(cats):
 	oc.objects.sort(key = lambda obj: obj.title)
 
 	return oc
-
-####################################################################################################
-def VideoParse(pid):
-
-	videosmil = HTTP.Request(DIRECT_FEED % pid).content
-	player = videosmil.split("ref src")
-	player = player[2].split('"')
-
-	if ".mp4" in player[1]:
-		player = player[1].replace(".mp4", "")
-		try:
-			clip = player.split(";")
-			clip = "mp4:" + clip[4]
-		except:
-			clip = player.split("/video/")
-			player = player.split("/video/")[0]
-			clip = "mp4:/video/" + clip[-1]
-	else:
-		player = player[1].replace(".flv", "")
-		try:
-			clip = player.split(";")
-			clip = clip[4]
-		except:
-			clip = player.split("/video/")
-			player = player.split("/video/")[0]
-			clip = "/video/" + clip[-1]
-
-	return Redirect(RTMPVideoItem(player, clip))
 
 
 ####################################################################################################
@@ -266,15 +247,14 @@ def VideosPage(pid, iid):
 			seasonint = int(float(season))
 			episode = item['contentCustomData'][0]['value']
 			episodeint = int(float(episode))
-# 			Log("Gerk: %i-%i : %s",seasonint, episodeint, title)
+
 			oc.add(
 				EpisodeObject(
-					key = Callback(VideoParse, pid=pid),
-					rating_key = pid, 
+					url = VIDEO_URL % pid,
 					title = title,
 					summary=summary,
 					duration=duration,
-					thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=R(ICON)),
+					thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON),
 					originally_available_at = originally_available_at,
 	 				season = seasonint,
 	 				index = episodeint
@@ -285,12 +265,11 @@ def VideosPage(pid, iid):
 			# if we don't get the season/episode info then don't set it
 			oc.add(
 				EpisodeObject(
-					key = Callback(VideoParse, pid=pid),
-					rating_key = pid, 
+					url = VIDEO_URL % pid,
 					title = title,
 					summary=summary,
 					duration=duration,
-					thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=R(ICON)),
+					thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON),
 					originally_available_at = originally_available_at
 				)
 			)
@@ -315,6 +294,7 @@ def SeasonsPage(cats, network, showtitle):
 					# made it to the Seasons list (it means they have child elements to view)
 					title="Uncategorized Items"
 				season_list.append(title)
+
 				iid = item['ID']
 				# there are a good handful of thumbnailUrls that have carriage returns in the middle of them!
 				thumb_url = item['thumbnailURL'].replace("\r\n\r\n","")
@@ -322,7 +302,7 @@ def SeasonsPage(cats, network, showtitle):
 					DirectoryObject(
 						key = Callback(VideosPage, pid=network[0], iid=iid),
 						title = title,
-						thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=R(ICON))
+						thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
 					)
 				)
 	oc.objects.sort(key = lambda obj: obj.title)
