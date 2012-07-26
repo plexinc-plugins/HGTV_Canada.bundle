@@ -70,7 +70,7 @@ def LoadShowList(cats):
 		if WantedCats(item['parent'],cats):
 			title = item['fullTitle'].split('/')[2]
 			iid = item['ID']
- 			thumb_url = item['thumbnailURL']
+			thumb_url = item['thumbnailURL']
 			
 			# a couple of shows have "Full Episodes" instead of "Season [0-9]"
 			if RE_SEASON_TEST.search(item['fullTitle']) or "Full Episodes" in item['fullTitle']:
@@ -118,7 +118,7 @@ def VideosPage(pid, iid):
 	for item in feeds['items']:	
 		title = item['title']
 		pid = item['PID']
-		summary =  item['description'].replace('In Full:', '')
+		summary = item['description'].replace('In Full:', '')
 		duration = item['length']
 		# there are a good handful of thumbnailUrls that have carriage returns in the middle of them!
 		thumb_url = item['thumbnailURL'].replace("\r\n\r\n","")
