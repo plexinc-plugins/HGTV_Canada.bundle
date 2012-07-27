@@ -2,37 +2,16 @@ TITLE = "HGTV.ca"
 ART = 'art-default.jpg'
 ICON = 'icon-default.png'
 
-HGTV_PARAMS = ["HmHUZlCuIXO_ymAAPiwCpTCNZ3iIF1EG", "z/HGTV%20Player%20-%20Video%20Center"]
+HGTV_PARAMS = ["HmHUZlCuIXO_ymAAPiwCpTCNZ3iIF1EG", "z/HGTVNEWVC%20-%20New%20Video%20Center"]
 FEED_LIST = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getCategoryList?PID=%s&startIndex=1&endIndex=500&query=hasReleases&query=CustomText|PlayerTag|%s&field=airdate&field=fullTitle&field=author&field=description&field=PID&field=thumbnailURL&field=title&contentCustomField=title&field=ID&field=parent"
 FEEDS_LIST = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getReleaseList?PID=%s&startIndex=1&endIndex=500&query=categoryIDs|%s&sortField=airdate&sortDescending=true&field=airdate&field=author&field=description&field=length&field=PID&field=thumbnailURL&field=title&contentCustomField=title&contentCustomField=Episode&contentCustomField=Season"
 DIRECT_FEED = "http://release.theplatform.com/content.select?format=SMIL&pid=%s&UserName=Unknown&Embedded=True&TrackBrowser=True&Tracking=True&TrackLocation=True"
 LOADCATS = { 
-	'full':["Full Episodes","Sarah Richardson","Mike Holmes","Peter Fallico","Sam Pynn","Colin and Justin","Classics"],
-	'sarah':['Sarah Richardson'],
-	'mike':['Mike Holmes'],
-	"peter":["Peter Fallico"],
-	"sam":["Sam Pynn"],
-	"colin":["Colin and Justin"],
-	"classics":["Classics"],
-	"original":["Original Video"],
-	"diy":["DIY Projects"],
-	"web":["Web Exclusives"],
-	"kitchens":["Kitchens"],
-	"realestate":["Real Estate"],
-	"backyard":["Backyard Living"],
-	"renos":["Renovations"],
-	"recent":["Most Recent"]
+	'full':["/Shows/"],
+	'how-to':["/How-To/"]
 	}
 RE_SEASON_TEST = Regex("Season")
 VIDEO_URL = 'http://www.hgtv.ca/video/?releasePID=%s'
-
-# KNOWN BUGS/ISSUES:
-# The show 'Sarah 101' has some bad data associated with it, it isn't properly indicated in seasons, 
-# Season 2 does show up in "recent" for now, but it's not a show_with_season according to all our rules here
-# Let's hope this is a one-off problem and not something they will continue to break moving forward
-# workarounds weren't feasible (tried several) and rewriting for two episodes one show is not either ;)
-# -- Gerk - 2012/06/02
-
 
 ####################################################################################################
 def Start():
@@ -62,106 +41,20 @@ def Start():
 
 ####################################################################################################
 def MainMenu():
-
-	if not Platform.HasFlash:
-		return MessageContainer(NAME, L('This channel requires Flash. Please download and install Adobe Flash on the computer running Plex Media Server.'))
-
-	oc = ObjectContainer(
-		objects = [
-			DirectoryObject(
-				key = Callback(LongVideos),
-				title = 'Full Length Shows'
-			),
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='recent'),
-				title = 'Recently Added'
-			),
-			DirectoryObject(
-				key = Callback(ShortVideos),
-				title = 'Shorter Video Clips'
-			),
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='web'),
-				title = 'Web Exclusives'
-			),
-	] )
-	
-	return oc
-
-####################################################################################################
-def LongVideos():
-
 	oc = ObjectContainer(
 		objects = [
 			DirectoryObject(
 				key = Callback(LoadShowList, cats='full'),
-				title = 'All Shows'
+				title = 'Shows'
 			),
 			DirectoryObject(
-				key = Callback(LoadShowList, cats='sarah'),
-				title = 'Sarah Richardson'
+				key = Callback(LoadShowList, cats='how-to'),
+				title = 'How To Videos'
 			),
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='mike'),
-				title = 'Mike Holmes'
-			),
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='peter'),
-				title = 'Peter Fallico'
-			),
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='sam'),
-				title = 'Sam Pynn'
-			),
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='colin'),
-				title = 'Colin and Justin'
-			),
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='classics'),
-				title = 'Classics'
-			),
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='recent'),
-				title = 'Recently Released'
-			)
 	] )
-	
+
 	return oc
 
-####################################################################################################
-def ShortVideos():
-	
-	oc = ObjectContainer(
-		objects = [
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='original'),
-				title = 'Original Video'
-			),
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='diy'),
-				title = 'DIY Projects'
-			),
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='kitchens'),
-				title = 'Kitchens'
-			),
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='realestate'),
-				title = 'Real Estate'
-			),
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='backyard'),
-				title = 'Backyard Living'
-			),
-			DirectoryObject(
-				key = Callback(LoadShowList, cats='renos'),
-				title = 'Renovations'
-			)
-
-	] )
-	
-	return oc
 	
 ####################################################################################################
 def LoadShowList(cats):
@@ -175,32 +68,24 @@ def LoadShowList(cats):
 
 	for item in content['items']:
 		if WantedCats(item['parent'],cats):
-			title = item['title']
-			# there are a good handful of thumbnailUrls that have carriage returns in the middle of them!
-			thumb_url = item['thumbnailURL'].replace("\r\n\r\n","")
+			title = item['fullTitle'].split('/')[2]
 			iid = item['ID']
+			thumb_url = item['thumbnailURL']
 			
-			if RE_SEASON_TEST.search(title):
-				show, season = title.split("Season")
-				if show=="":
-					# bad data from provider, skip this one
-					continue
-				show = show.rstrip().split(":")[0].rstrip().rstrip('.')
-				
-				if not(show in shows_with_seasons):
-					shows_with_seasons[show] = ""
+			# a couple of shows have "Full Episodes" instead of "Season [0-9]"
+			if RE_SEASON_TEST.search(item['fullTitle']) or "Full Episodes" in item['fullTitle']:
+				if not(title in shows_with_seasons):
+					Log.Debug("With Season: " + item['fullTitle'] + " --- " + item['title'])
+					shows_with_seasons[title] = ""
 					oc.add(
 						DirectoryObject(
-							key = Callback(SeasonsPage, cats=cats, network=network, showtitle=show),
-							title = show, 
+							key = Callback(SeasonsPage, cats=cats, network=network, showtitle=title),
+							title = title, 
 							thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
 						)
 					)
-			else:
-				if title=="":
-					# bad data from provider, skip this one
-					continue
-				if not(title in shows_without_seasons):
+			else:				
+				if not(title in shows_without_seasons) and not (title in shows_with_seasons):
 					shows_without_seasons[title] = []
 					shows_without_seasons[title].append(
 						DirectoryObject(
@@ -233,7 +118,7 @@ def VideosPage(pid, iid):
 	for item in feeds['items']:	
 		title = item['title']
 		pid = item['PID']
-		summary =  item['description'].replace('In Full:', '')
+		summary = item['description'].replace('In Full:', '')
 		duration = item['length']
 		# there are a good handful of thumbnailUrls that have carriage returns in the middle of them!
 		thumb_url = item['thumbnailURL'].replace("\r\n\r\n","")
@@ -285,19 +170,19 @@ def SeasonsPage(cats, network, showtitle):
 	season_list = []
 
 	for item in content['items']:
-		if WantedCats(item['parent'], cats) and showtitle in item['title']:
-			title = item['title'].split(showtitle)[1].lstrip(':').lstrip('.').lstrip()
+		if WantedCats(item['parent'], cats) and showtitle in item['parent']: # and RE_SEASON_TEST.search(item['title'])
+			title = item['title']
+			
+			# if this title is a season title prepend a space (to get it to top of list alphabetically
+			# for cases there there's a lot of other content (i.e. Decked Out)
+			if RE_SEASON_TEST.search(title):
+				title = " " + title
+			
 			if title not in season_list:
-				if title=="":
-					# bad data from provider, this is a corner case and happens often
-					# enough that it's worth adding these in as uncategorized if they
-					# made it to the Seasons list (it means they have child elements to view)
-					title="Uncategorized Items"
 				season_list.append(title)
 
 				iid = item['ID']
-				# there are a good handful of thumbnailUrls that have carriage returns in the middle of them!
-				thumb_url = item['thumbnailURL'].replace("\r\n\r\n","")
+				thumb_url = item['thumbnailURL']
 				oc.add(
 					DirectoryObject(
 						key = Callback(VideosPage, pid=network[0], iid=iid),
