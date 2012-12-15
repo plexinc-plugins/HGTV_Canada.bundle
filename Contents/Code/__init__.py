@@ -48,6 +48,10 @@ def MainMenu():
 				title = 'Shows'
 			),
 			DirectoryObject(
+				key = Callback(LatestShows),
+				title = 'Latest Videos Posted'
+			),
+			DirectoryObject(
 				key = Callback(LoadShowList, cats='how-to'),
 				title = 'How To Videos'
 			),
@@ -192,6 +196,46 @@ def SeasonsPage(cats, network, showtitle):
 				)
 	oc.objects.sort(key = lambda obj: obj.title)
 	return oc
+
+def LatestShows():
+	content = JSON.ObjectFromURL("http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getReleaseList?PID=HmHUZlCuIXO_ymAAPiwCpTCNZ3iIF1EG&startIndex=1&endIndex=50&field=airdate&field=author&field=description&field=length&field=PID&&field=URL&field=thumbnailURL&field=title&contentCustomField=title&contentCustomField=Episode&contentCustomField=Season&contentCustomField=Show")
+	oc = ObjectContainer()
+	
+	for item in content['items']:
+		vidTitle = item['title'];
+		pid = item['PID']
+		show = item['contentCustomData'][2]['value']
+		season = item['contentCustomData'][1]['value']
+		episode = item['contentCustomData'][0]['value']
+		
+		title = "%s" % (show)
+		
+		if season != "":
+			title = "%s - S%s" % (title, season)
+		if episode != "":
+			title = "%sE%s" % (title, episode)
+
+		title = "%s - %s" % (title, vidTitle)
+
+		summary = item['description']
+		duration = item['length']
+		thumb_url = item['thumbnailURL'].replace("\r\n\r\n","")
+		airdate = int(item['airdate'])/1000
+		originally_available_at = Datetime.FromTimestamp(airdate).date()
+
+		oc.add(
+			VideoClipObject(
+				url = VIDEO_URL % pid,
+				title = title,
+				summary=summary,
+				duration=duration,
+				thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON),
+				originally_available_at = originally_available_at
+			)
+		)
+		
+	return oc
+			
 
 ####################################################################################################
 def WantedCats(thisShow,cats):
