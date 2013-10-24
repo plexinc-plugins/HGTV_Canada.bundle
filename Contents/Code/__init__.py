@@ -1,6 +1,4 @@
 TITLE = "HGTV.ca"
-ART = 'art-default.jpg'
-ICON = 'icon-default.png'
 
 HGTV_PARAMS = ["HmHUZlCuIXO_ymAAPiwCpTCNZ3iIF1EG", "z/HGTVNEWVC%20-%20New%20Video%20Center"]
 FEED_LIST = "http://feeds.theplatform.com/ps/JSON/PortalService/2.2/getCategoryList?PID=%s&startIndex=1&endIndex=500&query=hasReleases&query=CustomText|PlayerTag|%s&field=airdate&field=fullTitle&field=author&field=description&field=PID&field=thumbnailURL&field=title&contentCustomField=title&field=ID&field=parent"
@@ -16,7 +14,7 @@ VIDEO_URL = 'http://www.hgtv.ca/video/?releasePID=%s'
 ####################################################################################################
 def Start():
 
-	Plugin.AddPrefixHandler('/video/hgtvcanada', MainMenu, TITLE, ICON, ART)
+	Plugin.AddPrefixHandler('/video/hgtvcanada', MainMenu, TITLE)
 
 	# setup the default viewgroups for the plugin	
 	Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
@@ -26,16 +24,7 @@ def Start():
 	# Setup the default attributes for the ObjectContainer
 	ObjectContainer.title1 = TITLE
 	ObjectContainer.view_group = 'List'
-	ObjectContainer.art = R(ART)
 	
-	# Setup the default attributes for the other objects
-	DirectoryObject.thumb = R(ICON)
-	DirectoryObject.art = R(ART)
-	VideoClipObject.thumb = R(ICON)
-	VideoClipObject.art = R(ART)
-	EpisodeObject.thumb = R(ICON)
-	EpisodeObject.art = R(ART)
-
 	# Setup some basic things the plugin needs to know about
 	HTTP.CacheTime = CACHE_1HOUR
 
@@ -85,7 +74,7 @@ def LoadShowList(cats):
 						DirectoryObject(
 							key = Callback(SeasonsPage, cats=cats, network=network, showtitle=title),
 							title = title, 
-							thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
+							thumb = Resource.ContentsOfURLWithFallback(url=thumb_url)
 						)
 					)
 			else:				
@@ -95,7 +84,7 @@ def LoadShowList(cats):
 						DirectoryObject(
 							key = Callback(VideosPage, pid=network[0], iid=iid),
 							title = title,
-							thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
+							thumb = Resource.ContentsOfURLWithFallback(url=thumb_url)
 						)
 					)
 
@@ -143,7 +132,7 @@ def VideosPage(pid, iid):
 					title = title,
 					summary=summary,
 					duration=duration,
-					thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON),
+					thumb = Resource.ContentsOfURLWithFallback(url=thumb_url),
 					originally_available_at = originally_available_at,
 	 				season = seasonint,
 	 				index = episodeint
@@ -158,7 +147,7 @@ def VideosPage(pid, iid):
 					title = title,
 					summary=summary,
 					duration=duration,
-					thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON),
+					thumb = Resource.ContentsOfURLWithFallback(url=thumb_url),
 					originally_available_at = originally_available_at
 				)
 			)
@@ -191,7 +180,7 @@ def SeasonsPage(cats, network, showtitle):
 					DirectoryObject(
 						key = Callback(VideosPage, pid=network[0], iid=iid),
 						title = title,
-						thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
+						thumb = Resource.ContentsOfURLWithFallback(url=thumb_url)
 					)
 				)
 	oc.objects.sort(key = lambda obj: obj.title)
@@ -229,7 +218,7 @@ def LatestShows():
 				title = title,
 				summary=summary,
 				duration=duration,
-				thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON),
+				thumb = Resource.ContentsOfURLWithFallback(url=thumb_url),
 				originally_available_at = originally_available_at
 			)
 		)
