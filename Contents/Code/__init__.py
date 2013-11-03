@@ -189,7 +189,7 @@ def SeasonsPage(cats, network, showtitle):
 			# -- i.e. we won't have multiple items with the standard show title, only if they have multiple seasons) 
 			# Gerk -- Nov 2/13
 			if title == 'Full Episodes':
-				title = item['parent'].split("/")[-1] + " " + title
+				title = " " + item['parent'].split("/")[-1] + " " + title
 			
 			if title not in season_list:
 				season_list.append(title)
