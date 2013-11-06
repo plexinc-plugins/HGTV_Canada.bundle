@@ -171,6 +171,15 @@ def SeasonsPage(cats, network, showtitle):
 			if RE_SEASON_TEST.search(title):
 				title = " " + title
 			
+			# corner cases:  There are now some shows that don't follow this logic properly. We need to workaround these
+			# which have multiple seasons with the 'title' being "Full Episodes" (instead of the expected Season X).  We will 
+			# do this by prepending the last part of the 'parent' (which is almost all cases of these are either "Season X" 
+			# or the actual show title so either way it presents ok within the menus and still allows us to filter dupes 
+			# -- i.e. we won't have multiple items with the standard show title, only if they have multiple seasons) 
+			# Gerk -- Nov 2/13
+			if title == 'Full Episodes':
+				title = " " + item['parent'].split("/")[-1] + " " + title
+			
 			if title not in season_list:
 				season_list.append(title)
 
