@@ -141,8 +141,8 @@ def CreateVideoObject(entry):
 
     duration = None
     if 'content' in entry:
-        if 'duration' in entry['content']:
-            duration = int(entry['content']['duration'] * 1000) 
+        if 'duration' in entry['content'][0]:
+            duration = int(float(entry['content'][0]['duration']) * 1000) 
 
     if entry['pl1$clipType'] in FULL_EPISODE_TYPES:
         return EpisodeObject(
