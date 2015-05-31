@@ -7,6 +7,7 @@ ICON = 'icon-default.png'
 FEED_URL = 'http://feed.theplatform.com/f/dtjsEC/EAlt6FfQ_kCX?count=true&byCategoryIDs=%s&startIndex=%s&endIndex=%s&sort=pubDate|desc'
 MOST_RECENT_ITEMS = 50
 VIDEO_URL_TEMPLATE = 'http://www.hgtv.ca/video/video.html?v=%s'
+FULL_EPISODE_TYPES = ['episode', 'webisode']
 
 ####################################################################################################
 def Start():
@@ -47,10 +48,10 @@ def MostRecent(title):
     json_data = JSON.ObjectFromURL(FEED_URL % ('', 1, MOST_RECENT_ITEMS))
     
     for entry in json_data['entries']:
-        if entry['pl1$clipType'] != 'episode':
+        if entry['pl1$clipType'] not in FULL_EPISODE_TYPES:
             continue
 
-        oc.add(CreateEpisodeObject(entry))
+        oc.add(CreateVideoObject(entry))
 
     return oc
 
@@ -64,9 +65,6 @@ def AllShows(title):
     shows = {}
     
     for entry in json_data['entries']:
-        if entry['pl1$clipType'] != 'episode':
-            continue
-
         show = entry['pl1$show']
         
         if not show in shows:
@@ -79,8 +77,8 @@ def AllShows(title):
     for show in shows:
         oc.add(
             DirectoryObject(
-                key = Callback(Episodes, show=show),
-                title = show + " (%s episodes)" % (shows[show]['episode_count']),
+                key = Callback(Videos, show=show),
+                title = show + " (%s videos)" % (shows[show]['episode_count']),
                 thumb = shows[show]['thumb']
             )
         )
@@ -90,34 +88,55 @@ def AllShows(title):
     return oc
 
 ##########################################################################################
-@route(PREFIX + '/episodes')
-def Episodes(show):
+@route(PREFIX + '/clips')
+def Clips(show):
+    return Videos(show=show, full_episodes_only=False)
+
+##########################################################################################
+@route(PREFIX + '/videos', full_episodes_only = bool)
+def Videos(show, full_episodes_only=True):
 
     oc = ObjectContainer(title2 = show)
+    
+    if full_episodes_only:
+        clips_oc = Clips(show)
+        
+        if len(clips_oc) > 1:
+            oc.add(DirectoryObject(key=Callback(Clips, show=show), title="Clips"))
     
     json_data = JSON.ObjectFromURL(FEED_URL % ('', 1, 1000))    
     
     for entry in json_data['entries']:
         if str(show) != str(entry['pl1$show']):
             continue
-            
-        if entry['pl1$clipType'] != 'episode':
-            continue
 
-        oc.add(CreateEpisodeObject(entry))
+        if full_episodes_only:
+            if entry['pl1$clipType'] not in FULL_EPISODE_TYPES:
+                continue
+        else:
+            if entry['pl1$clipType'] in FULL_EPISODE_TYPES:
+                continue
+                
+        oc.add(CreateVideoObject(entry))
 
     return oc
 
 ##########################################################################################
-def CreateEpisodeObject(entry):
+def CreateVideoObject(entry):
 
     url = VIDEO_URL_TEMPLATE % entry['id'].split("/")[-1]
     title = entry['title']
     summary = entry['description'] if 'description' in entry else None
     thumb = entry['defaultThumbnailUrl'] if 'defaultThumbnailUrl' in entry else None
-    show = entry['pl1$show'] if 'pl1$show' in entry else None
-    season = int(entry['pl1$season']) if 'pl1$season' in entry else None
-    index = int(entry['pl1$episode']) if 'pl1$episode' in entry else None
+    
+    show = None
+    season = None
+    index = None
+    if entry['pl1$clipType'] in FULL_EPISODE_TYPES:
+        show = entry['pl1$show'] if 'pl1$show' in entry else None
+        season = int(entry['pl1$season']) if 'pl1$season' in entry else None
+        index = int(entry['pl1$episode']) if 'pl1$episode' in entry else None
+
     originally_available_at = Datetime.FromTimestamp(entry['pubDate'] / 1000).date() if 'pubDate' in entry else None
 
     duration = None
@@ -125,16 +144,26 @@ def CreateEpisodeObject(entry):
         if 'duration' in entry['content']:
             duration = int(entry['content']['duration'] * 1000) 
 
-    return EpisodeObject(
-        url = url,
-        title = title,
-        summary = summary,
-        thumb = thumb,
-        show = show,
-        season = season,
-        index = index,
-        originally_available_at = originally_available_at,
-        duration = duration
-    )
+    if entry['pl1$clipType'] in FULL_EPISODE_TYPES:
+        return EpisodeObject(
+            url = url,
+            title = title,
+            summary = summary,
+            thumb = thumb,
+            show = show,
+            season = season,
+            index = index,
+            originally_available_at = originally_available_at,
+            duration = duration
+        )
+    else:
+        return VideoClipObject(
+            url = url,
+            title = title,
+            summary = summary,
+            thumb = thumb,
+            originally_available_at = originally_available_at,
+            duration = duration
+        )
 
 
