@@ -4,6 +4,7 @@ TITLE = 'HGTV Canada'
 ART = 'art-default.jpg'
 ICON = 'icon-default.png'
 
+MAIN_URL = 'http://common.farm1.smdg.ca/Forms/PlatformVideoFeed?platformUrl=http%3A//feed.theplatform.com/f/dtjsEC/EAlt6FfQ_kCX/categories%3Fpretty%3Dtrue%26byHasReleases%3Dtrue%26range%3D1-1000%26byCustomValue%3D%7Bplayertag%7D%7Bz/HGTVNEWVC%20-%20New%20Video%20Center%7D%26sort%3DfullTitle'
 FEED_URL = 'http://feed.theplatform.com/f/dtjsEC/EAlt6FfQ_kCX?count=true&byCategoryIDs=%s&startIndex=%s&endIndex=%s&sort=pubDate|desc'
 MOST_RECENT_ITEMS = 50
 VIDEO_URL_TEMPLATE = 'http://www.hgtv.ca/video/video.html?v=%s'
@@ -29,14 +30,9 @@ def MainMenu():
             title = title
         )
     )    
-
-    title = 'All Shows'
-    oc.add(
-        DirectoryObject(
-            key = Callback(AllShows, title=title),
-            title = title
-        )
-    )
+    
+    for object in GetEntries().objects:
+        oc.add(object)
     
     return oc
     
@@ -56,67 +52,72 @@ def MostRecent(title):
     return oc
 
 ##########################################################################################
-@route(PREFIX + '/allshows')
-def AllShows(title):
-
+@route(PREFIX + '/getentries', depth = int)
+def GetEntries(title="", depth=1, id=None):
+    
     oc = ObjectContainer(title2 = title)
     
-    json_data = JSON.ObjectFromURL(FEED_URL % ('', 1, 1000))
-    shows = {}
+    data = HTTP.Request(MAIN_URL).content
+    data = data[1:-1]
+    json_data = JSON.ObjectFromString(data)
     
-    for entry in json_data['entries']:
-        show = entry['pl1$show']
+    for item in json_data['items']:
+        if not item['fullTitle'].startswith("HGTVNEWVC/"):
+            continue
+            
+        if item['depth'] != depth:
+            continue
         
-        if not show in shows:
-            shows[show] = {}
-            shows[show]['episode_count'] = 1
-            shows[show]['thumb'] = entry['defaultThumbnailUrl']
-        else:
-            shows[show]['episode_count'] = shows[show]['episode_count'] + 1
-        
-    for show in shows:
-        oc.add(
-            DirectoryObject(
-                key = Callback(Videos, show=show),
-                title = show + " (%s videos)" % (shows[show]['episode_count']),
-                thumb = shows[show]['thumb']
+        if id:
+            if id != item['parentId']:
+                continue
+
+        if item['hasReleases'] and depth > 1:
+            oc.add(
+                DirectoryObject(
+                    key = Callback(Videos, show=item['title'], id=item['id'].split("/")[-1]),
+                    title = item['title']
+                )
             )
-        )
+        else:
+            oc.add(
+                DirectoryObject(
+                    key = Callback(GetEntries, title=item['title'], depth=depth+1, id=item['id']),
+                    title = item['title']
+                )
+            )
     
     oc.objects.sort(key = lambda obj: obj.title)
     
-    return oc
+    return oc 
 
 ##########################################################################################
 @route(PREFIX + '/clips')
-def Clips(show):
-    return Videos(show=show, full_episodes_only=False)
+def Clips(show, id):
+    return Videos(show=show, id=id, full_episodes_only=False)
 
 ##########################################################################################
 @route(PREFIX + '/videos', full_episodes_only = bool)
-def Videos(show, full_episodes_only=True):
+def Videos(show, id, full_episodes_only=True):
 
     oc = ObjectContainer(title2 = show)
     
     if full_episodes_only:
-        clips_oc = Clips(show)
+        clips_oc = Clips(show, id)
         
         if len(clips_oc) > 1:
-            oc.add(DirectoryObject(key=Callback(Clips, show=show), title="Clips"))
+            oc.add(DirectoryObject(key=Callback(Clips, show=show, id=id), title="Clips"))
     
-    json_data = JSON.ObjectFromURL(FEED_URL % ('', 1, 1000))    
+    json_data = JSON.ObjectFromURL(FEED_URL % (id, 1, 1000))    
     
     for entry in json_data['entries']:
-        if str(show) != str(entry['pl1$show']):
-            continue
-
         if full_episodes_only:
             if entry['pl1$clipType'] not in FULL_EPISODE_TYPES:
                 continue
         else:
             if entry['pl1$clipType'] in FULL_EPISODE_TYPES:
                 continue
-                
+
         oc.add(CreateVideoObject(entry))
 
     return oc
@@ -165,5 +166,4 @@ def CreateVideoObject(entry):
             originally_available_at = originally_available_at,
             duration = duration
         )
-
 
