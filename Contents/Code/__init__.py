@@ -97,8 +97,10 @@ def GetEntries(title="", depth=1, id=None, return_first_found=False):
     
     if len(oc) > 1:
         return oc
-    else:
+    elif len(oc) == 1:
         return GetEntries(title=title, depth=depth, id=id, return_first_found=True)
+    else:
+        return ObjectContainer(header="Sorry", message="Couldn't find any items")
 
 ##########################################################################################
 @route(PREFIX + '/clips')
@@ -132,7 +134,10 @@ def Videos(show, id, full_episodes_only=True):
             else:
                 return clips_oc
 
-    return oc
+    if len(oc) < 1:
+        return ObjectContainer(header="Sorry", message="Couldn't find any videos")
+    else:
+        return oc
 
 ##########################################################################################
 def CreateVideoObject(entry):
