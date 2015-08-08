@@ -52,8 +52,8 @@ def MostRecent(title):
     return oc
 
 ##########################################################################################
-@route(PREFIX + '/getentries', depth = int)
-def GetEntries(title="", depth=1, id=None):
+@route(PREFIX + '/getentries', depth = int, return_first_found = bool)
+def GetEntries(title="", depth=1, id=None, return_first_found=False):
     
     oc = ObjectContainer(title2 = title)
     
@@ -73,23 +73,34 @@ def GetEntries(title="", depth=1, id=None):
                 continue
 
         if item['hasReleases'] and depth > 1:
-            oc.add(
-                DirectoryObject(
-                    key = Callback(Videos, show=item['title'], id=item['id'].split("/")[-1]),
-                    title = item['title']
+            if return_first_found:
+                return Videos(show=item['title'], id=item['id'].split("/")[-1])
+            else:
+                oc.add(
+                    DirectoryObject(
+                        key = Callback(Videos, show=item['title'], id=item['id'].split("/")[-1]),
+                        title = item['title']
+                    )
                 )
-            )
         else:
-            oc.add(
-                DirectoryObject(
-                    key = Callback(GetEntries, title=item['title'], depth=depth+1, id=item['id']),
-                    title = item['title']
+            if return_first_found:
+                return GetEntries(title=item['title'], depth=depth+1, id=item['id'])
+            else:
+                oc.add(
+                    DirectoryObject(
+                        key = Callback(GetEntries, title=item['title'], depth=depth+1, id=item['id']),
+                        title = item['title']
+                    )
                 )
-            )
     
     oc.objects.sort(key = lambda obj: obj.title)
     
-    return oc 
+    if len(oc) > 1:
+        return oc
+    elif len(oc) == 1:
+        return GetEntries(title=title, depth=depth, id=id, return_first_found=True)
+    else:
+        return ObjectContainer(header="Sorry", message="Couldn't find any items")
 
 ##########################################################################################
 @route(PREFIX + '/clips')
@@ -101,12 +112,6 @@ def Clips(show, id):
 def Videos(show, id, full_episodes_only=True):
 
     oc = ObjectContainer(title2 = show)
-    
-    if full_episodes_only:
-        clips_oc = Clips(show, id)
-        
-        if len(clips_oc) > 1:
-            oc.add(DirectoryObject(key=Callback(Clips, show=show, id=id), title="Clips"))
     
     json_data = JSON.ObjectFromURL(FEED_URL % (id, 1, 1000))    
     
@@ -120,7 +125,19 @@ def Videos(show, id, full_episodes_only=True):
 
         oc.add(CreateVideoObject(entry))
 
-    return oc
+    if full_episodes_only:
+        clips_oc = Clips(show, id)
+        
+        if len(clips_oc) > 0:
+            if len(oc) > 0:
+                oc.add(DirectoryObject(key=Callback(Clips, show=show, id=id), title="Clips"))
+            else:
+                return clips_oc
+
+    if len(oc) < 1:
+        return ObjectContainer(header="Sorry", message="Couldn't find any videos")
+    else:
+        return oc
 
 ##########################################################################################
 def CreateVideoObject(entry):
