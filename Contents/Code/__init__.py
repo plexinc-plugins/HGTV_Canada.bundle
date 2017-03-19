@@ -7,7 +7,7 @@ ICON = 'icon-default.png'
 MAIN_URL = 'http://common.farm1.smdg.ca/Forms/PlatformVideoFeed?platformUrl=http%3A//feed.theplatform.com/f/dtjsEC/EAlt6FfQ_kCX/categories%3Fpretty%3Dtrue%26byHasReleases%3Dtrue%26range%3D1-1000%26byCustomValue%3D%7Bplayertag%7D%7Bz/HGTVNEWVC%20-%20New%20Video%20Center%7D%26sort%3DfullTitle'
 FEED_URL = 'http://feed.theplatform.com/f/dtjsEC/EAlt6FfQ_kCX?count=true&byCategoryIDs=%s&startIndex=%s&endIndex=%s&sort=pubDate|desc'
 MOST_RECENT_ITEMS = 50
-VIDEO_URL_TEMPLATE = 'http://www.hgtv.ca/video/video.html?v=%s'
+VIDEO_URL_TEMPLATE = 'http://www.hgtv.ca/shows/%s/videos/%s-%s/'
 FULL_EPISODE_TYPES = ['episode', 'webisode']
 
 ####################################################################################################
@@ -142,8 +142,14 @@ def Videos(show, id, full_episodes_only=True):
 ##########################################################################################
 def CreateVideoObject(entry):
 
-    url = VIDEO_URL_TEMPLATE % entry['id'].split("/")[-1]
     title = entry['title']
+    show = entry['pl1$show']
+    show_id = entry['id'].split("/")[-1]
+
+    # Create the Front end URL used for the URL service
+    # Eg: http://www.hgtv.ca/shows/timber-kings/videos/under-the-gun-889567299613/
+    url = VIDEO_URL_TEMPLATE % ((title.lower().replace(' ', '-')), (show.lower().replace(' ', '-')), show_id)
+
     summary = entry['description'] if 'description' in entry else None
     thumb = entry['defaultThumbnailUrl'] if 'defaultThumbnailUrl' in entry else None
     
