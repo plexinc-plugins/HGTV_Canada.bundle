@@ -2,7 +2,7 @@ PREFIX = '/video/hgtvcanada'
 
 TITLE = 'HGTV Canada'
 ART = 'art-default.jpg'
-ICON = 'icon-default.png'
+ICON = 'icon-default.jpg'
 
 MAIN_URL = 'http://common.farm1.smdg.ca/Forms/PlatformVideoFeed?platformUrl=http%3A//feed.theplatform.com/f/dtjsEC/EAlt6FfQ_kCX/categories%3Fpretty%3Dtrue%26byHasReleases%3Dtrue%26range%3D1-1000%26byCustomValue%3D%7Bplayertag%7D%7Bz/HGTVNEWVC%20-%20New%20Video%20Center%7D%26sort%3DfullTitle'
 FEED_URL = 'http://feed.theplatform.com/f/dtjsEC/EAlt6FfQ_kCX?count=true&byCategoryIDs=%s&startIndex=%s&endIndex=%s&sort=pubDate|desc'
@@ -19,7 +19,7 @@ def Start():
     HTTP.User_Agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18'
 
 ##########################################################################################
-@handler(PREFIX, TITLE)
+@handler(PREFIX, TITLE, art=ART, thumb=ICON)
 def MainMenu():
     oc = ObjectContainer()
     
