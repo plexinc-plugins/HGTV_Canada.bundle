@@ -148,7 +148,7 @@ def CreateVideoObject(entry):
 
     # Create the Front end URL used for the URL service
     # Eg: http://www.hgtv.ca/shows/timber-kings/videos/under-the-gun-889567299613/
-    url = VIDEO_URL_TEMPLATE % ((title.lower().replace(' ', '-')), (show.lower().replace(' ', '-')), show_id)
+    url = VIDEO_URL_TEMPLATE % ((show.lower().replace(' ', '-')), (title.lower().replace(' ', '-')), show_id)
 
     summary = entry['description'] if 'description' in entry else None
     thumb = entry['defaultThumbnailUrl'] if 'defaultThumbnailUrl' in entry else None
