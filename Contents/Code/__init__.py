@@ -10,6 +10,8 @@ MOST_RECENT_ITEMS = 50
 VIDEO_URL_TEMPLATE = 'http://www.hgtv.ca/shows/%s/videos/%s-%s/'
 FULL_EPISODE_TYPES = ['episode', 'webisode']
 
+RE_CLEAN = Regex('[^a-z0-9\-]')
+
 ####################################################################################################
 def Start():
     # Setup the default attributes for the ObjectContainer
@@ -148,7 +150,7 @@ def CreateVideoObject(entry):
 
     # Create the Front end URL used for the URL service
     # Eg: http://www.hgtv.ca/shows/timber-kings/videos/under-the-gun-889567299613/
-    url = VIDEO_URL_TEMPLATE % ((show.lower().replace(' ', '-')), (title.lower().replace(' ', '-')), show_id)
+    url = VIDEO_URL_TEMPLATE % (RE_CLEAN.sub('', show.lower().replace(' ', '-')), RE_CLEAN.sub('', title.lower().replace(' ', '-')), show_id)
 
     summary = entry['description'] if 'description' in entry else None
     thumb = entry['defaultThumbnailUrl'] if 'defaultThumbnailUrl' in entry else None
