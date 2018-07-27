@@ -161,8 +161,8 @@ def CreateVideoObject(entry):
     if entry['pl1$clipType'] in FULL_EPISODE_TYPES:
 
         show = entry['pl1$show'] if 'pl1$show' in entry else None
-        season = int(entry['pl1$season']) if 'pl1$season' in entry else None
-        index = int(entry['pl1$episode']) if 'pl1$episode' in entry else None
+        season = int(entry['pl1$season']) if 'pl1$season' in entry and entry['pl1$season'].isdigit() else None
+        index = int(entry['pl1$episode']) if 'pl1$episode' in entry and entry['pl1$episode'].isdigit() else None
 
     originally_available_at = Datetime.FromTimestamp(entry['pubDate'] / 1000).date() if 'pubDate' in entry else None
 
